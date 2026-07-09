@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "Regulate AI — Reporting Bridge"
+version = "1.0.0"
+id = "artifacts/reporting-bridge"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18194
+
+[services.development]
+run = "pnpm --filter @workspace/reporting-bridge run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/reporting-bridge", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/reporting-bridge/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18194"
+BASE_PATH = "/"

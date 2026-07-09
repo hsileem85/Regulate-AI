@@ -3,13 +3,26 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Regulate AI - Reporting Bridge API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: reports
+    description: FRA report catalogue management
+  - name: reportSchema
+    description: Report column schema management
+  - name: reportRules
+    description: Report validation rule management
+  - name: companies
+    description: Regulated company management
+  - name: requests
+    description: Company report request management
+  - name: dashboard
+    description: Dashboard summary endpoints
+
 paths:
   /healthz:
     get:
@@ -24,6 +37,483 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── FRA Dashboard ──────────────────────────────────────────────────────────
+  /dashboard/fra-summary:
+    get:
+      operationId: getFraSummary
+      tags: [dashboard]
+      summary: FRA control tower summary
+      responses:
+        "200":
+          description: Summary stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FraSummary"
+
+  /dashboard/company-summary:
+    get:
+      operationId: getCompanySummary
+      tags: [dashboard]
+      summary: Company dashboard summary
+      parameters:
+        - name: companyId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Summary stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanySummary"
+
+  # ── Reports ────────────────────────────────────────────────────────────────
+  /reports:
+    get:
+      operationId: listReports
+      tags: [reports]
+      summary: List all report catalogues
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, published]
+        - name: domain
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Report"
+    post:
+      operationId: createReport
+      tags: [reports]
+      summary: Create a new report catalogue (draft)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportInput"
+      responses:
+        "201":
+          description: Created report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+
+  /reports/{id}:
+    get:
+      operationId: getReport
+      tags: [reports]
+      summary: Get a report catalogue by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateReport
+      tags: [reports]
+      summary: Update a report catalogue
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportUpdate"
+      responses:
+        "200":
+          description: Updated report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+    delete:
+      operationId: deleteReport
+      tags: [reports]
+      summary: Delete a draft report
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /reports/{id}/publish:
+    post:
+      operationId: publishReport
+      tags: [reports]
+      summary: Publish a report catalogue to targeted companies
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Published report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+
+  /reports/{id}/compliance:
+    get:
+      operationId: getReportCompliance
+      tags: [reports]
+      summary: Get compliance breakdown for a published report
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Compliance breakdown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceBreakdown"
+
+  # ── Report Schema Columns ──────────────────────────────────────────────────
+  /reports/{reportId}/schema:
+    get:
+      operationId: listReportColumns
+      tags: [reportSchema]
+      summary: List all schema columns for a report
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of columns
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReportColumn"
+    post:
+      operationId: createReportColumn
+      tags: [reportSchema]
+      summary: Add a column to a report schema
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportColumnInput"
+      responses:
+        "201":
+          description: Created column
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportColumn"
+
+  /reports/{reportId}/schema/{columnId}:
+    delete:
+      operationId: deleteReportColumn
+      tags: [reportSchema]
+      summary: Remove a column from a report schema
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: columnId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Report Rules ───────────────────────────────────────────────────────────
+  /reports/{reportId}/rules:
+    get:
+      operationId: listReportRules
+      tags: [reportRules]
+      summary: List validation rules for a report
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReportRule"
+    post:
+      operationId: createReportRule
+      tags: [reportRules]
+      summary: Add a validation rule to a report
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportRuleInput"
+      responses:
+        "201":
+          description: Created rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportRule"
+
+  /reports/{reportId}/rules/{ruleId}:
+    delete:
+      operationId: deleteReportRule
+      tags: [reportRules]
+      summary: Remove a validation rule
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: ruleId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Companies ──────────────────────────────────────────────────────────────
+  /companies:
+    get:
+      operationId: listCompanies
+      tags: [companies]
+      summary: List all registered companies
+      parameters:
+        - name: domain
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of companies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Company"
+    post:
+      operationId: createCompany
+      tags: [companies]
+      summary: Register a new financial company
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanyInput"
+      responses:
+        "201":
+          description: Created company
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Company"
+
+  /companies/{id}:
+    get:
+      operationId: getCompany
+      tags: [companies]
+      summary: Get a company by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Company
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Company"
+
+  # ── Report Requests (Company Side) ────────────────────────────────────────
+  /requests:
+    get:
+      operationId: listRequests
+      tags: [requests]
+      summary: List report requests (for a company or all for FRA)
+      parameters:
+        - name: companyId
+          in: query
+          schema:
+            type: integer
+        - name: reportId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending_acceptance, accepted, validating, submitted, overdue]
+      responses:
+        "200":
+          description: List of requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReportRequest"
+
+  /requests/{id}:
+    get:
+      operationId: getRequest
+      tags: [requests]
+      summary: Get a report request by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Report request with report and company detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportRequestDetail"
+
+  /requests/{id}/accept:
+    post:
+      operationId: acceptRequest
+      tags: [requests]
+      summary: Company accepts a report request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportRequest"
+
+  /requests/{id}/validate:
+    post:
+      operationId: validateRequest
+      tags: [requests]
+      summary: Run rule engine validation on submitted data
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidationInput"
+      responses:
+        "200":
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationResult"
+
+  /requests/{id}/submit:
+    post:
+      operationId: submitRequest
+      tags: [requests]
+      summary: Final submission of validated data to FRA
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmissionInput"
+      responses:
+        "200":
+          description: Submission receipt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmissionReceipt"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +524,548 @@ components:
       required:
         - status
 
+    # ── Dashboard ─────────────────────────────────────────────────────────────
+    FraSummary:
+      type: object
+      properties:
+        activeReports:
+          type: integer
+        totalCompanies:
+          type: integer
+        overallComplianceRate:
+          type: number
+        totalSubmitted:
+          type: integer
+        totalOverdue:
+          type: integer
+        totalPending:
+          type: integer
+        domainBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/DomainStat"
+        upcomingDeadlines:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeadlineItem"
+      required:
+        - activeReports
+        - totalCompanies
+        - overallComplianceRate
+        - totalSubmitted
+        - totalOverdue
+        - totalPending
+        - domainBreakdown
+        - upcomingDeadlines
+
+    DomainStat:
+      type: object
+      properties:
+        domain:
+          type: string
+        complianceRate:
+          type: number
+        submitted:
+          type: integer
+        pending:
+          type: integer
+        overdue:
+          type: integer
+      required:
+        - domain
+        - complianceRate
+        - submitted
+        - pending
+        - overdue
+
+    DeadlineItem:
+      type: object
+      properties:
+        reportId:
+          type: integer
+        reportName:
+          type: string
+        submissionDeadline:
+          type: string
+        pendingCount:
+          type: integer
+      required:
+        - reportId
+        - reportName
+        - submissionDeadline
+        - pendingCount
+
+    CompanySummary:
+      type: object
+      properties:
+        companyName:
+          type: string
+        pendingAcceptance:
+          type: integer
+        accepted:
+          type: integer
+        validating:
+          type: integer
+        submitted:
+          type: integer
+        overdue:
+          type: integer
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityItem"
+      required:
+        - companyName
+        - pendingAcceptance
+        - accepted
+        - validating
+        - submitted
+        - overdue
+        - recentActivity
+
+    ActivityItem:
+      type: object
+      properties:
+        requestId:
+          type: integer
+        reportName:
+          type: string
+        status:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - requestId
+        - reportName
+        - status
+        - updatedAt
+
+    ComplianceBreakdown:
+      type: object
+      properties:
+        reportId:
+          type: integer
+        reportName:
+          type: string
+        totalNotified:
+          type: integer
+        pending:
+          type: integer
+        accepted:
+          type: integer
+        submitted:
+          type: integer
+        overdue:
+          type: integer
+        byDomain:
+          type: array
+          items:
+            $ref: "#/components/schemas/DomainStat"
+      required:
+        - reportId
+        - reportName
+        - totalNotified
+        - pending
+        - accepted
+        - submitted
+        - overdue
+        - byDomain
+
+    # ── Report ─────────────────────────────────────────────────────────────────
+    Report:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        frequency:
+          type: string
+          enum: [ad-hoc, daily, weekly, monthly, quarterly, annually]
+        targetDomains:
+          type: array
+          items:
+            type: string
+        issueDate:
+          type: ["string", "null"]
+        implementationWindowDays:
+          type: integer
+        submissionDeadline:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [draft, published]
+        rulesBookUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - name
+        - description
+        - frequency
+        - targetDomains
+        - implementationWindowDays
+        - status
+        - createdAt
+        - updatedAt
+
+    ReportInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        frequency:
+          type: string
+          enum: [ad-hoc, daily, weekly, monthly, quarterly, annually]
+        targetDomains:
+          type: array
+          items:
+            type: string
+          minItems: 1
+        issueDate:
+          type: string
+        implementationWindowDays:
+          type: integer
+          minimum: 1
+        submissionDeadline:
+          type: string
+        rulesBookUrl:
+          type: string
+      required:
+        - name
+        - description
+        - frequency
+        - targetDomains
+        - implementationWindowDays
+
+    ReportUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        frequency:
+          type: string
+          enum: [ad-hoc, daily, weekly, monthly, quarterly, annually]
+        targetDomains:
+          type: array
+          items:
+            type: string
+        issueDate:
+          type: string
+        implementationWindowDays:
+          type: integer
+        submissionDeadline:
+          type: string
+        rulesBookUrl:
+          type: string
+
+    # ── Report Schema Columns ─────────────────────────────────────────────────
+    ReportColumn:
+      type: object
+      properties:
+        id:
+          type: integer
+        reportId:
+          type: integer
+        columnName:
+          type: string
+        dataType:
+          type: string
+          enum: [string, integer, decimal, date, boolean, enum]
+        description:
+          type: string
+        isMandatory:
+          type: boolean
+        enumValues:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - reportId
+        - columnName
+        - dataType
+        - description
+        - isMandatory
+        - createdAt
+
+    ReportColumnInput:
+      type: object
+      properties:
+        columnName:
+          type: string
+          minLength: 1
+        dataType:
+          type: string
+          enum: [string, integer, decimal, date, boolean, enum]
+        description:
+          type: string
+        isMandatory:
+          type: boolean
+        enumValues:
+          type: string
+      required:
+        - columnName
+        - dataType
+        - description
+        - isMandatory
+
+    # ── Report Rules ──────────────────────────────────────────────────────────
+    ReportRule:
+      type: object
+      properties:
+        id:
+          type: integer
+        reportId:
+          type: integer
+        columnName:
+          type: string
+        ruleType:
+          type: string
+          enum: [range, not_null, regex, cross_column, enum_check]
+        operator:
+          type: ["string", "null"]
+        value:
+          type: ["string", "null"]
+        compareColumn:
+          type: ["string", "null"]
+        description:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - reportId
+        - columnName
+        - ruleType
+        - description
+        - createdAt
+
+    ReportRuleInput:
+      type: object
+      properties:
+        columnName:
+          type: string
+          minLength: 1
+        ruleType:
+          type: string
+          enum: [range, not_null, regex, cross_column, enum_check]
+        operator:
+          type: string
+        value:
+          type: string
+        compareColumn:
+          type: string
+        description:
+          type: string
+      required:
+        - columnName
+        - ruleType
+        - description
+
+    # ── Company ────────────────────────────────────────────────────────────────
+    Company:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        domain:
+          type: string
+          enum: [brokerage, asset_management, financing, leasing, factoring, fintech_bnpl, other]
+        email:
+          type: string
+        contactPerson:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - domain
+        - email
+        - contactPerson
+        - createdAt
+
+    CompanyInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        domain:
+          type: string
+          enum: [brokerage, asset_management, financing, leasing, factoring, fintech_bnpl, other]
+        email:
+          type: string
+        contactPerson:
+          type: string
+      required:
+        - name
+        - domain
+        - email
+        - contactPerson
+
+    # ── Report Request ─────────────────────────────────────────────────────────
+    ReportRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        reportId:
+          type: integer
+        companyId:
+          type: integer
+        status:
+          type: string
+          enum: [pending_acceptance, accepted, validating, submitted, overdue]
+        acceptedAt:
+          type: ["string", "null"]
+        submittedAt:
+          type: ["string", "null"]
+        submissionHash:
+          type: ["string", "null"]
+        validationErrorCount:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - reportId
+        - companyId
+        - status
+        - createdAt
+        - updatedAt
+
+    ReportRequestDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        status:
+          type: string
+          enum: [pending_acceptance, accepted, validating, submitted, overdue]
+        report:
+          $ref: "#/components/schemas/Report"
+        company:
+          $ref: "#/components/schemas/Company"
+        columns:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportColumn"
+        rules:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportRule"
+        acceptedAt:
+          type: ["string", "null"]
+        submittedAt:
+          type: ["string", "null"]
+        submissionHash:
+          type: ["string", "null"]
+        validationErrors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationError"
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - status
+        - report
+        - company
+        - columns
+        - rules
+        - validationErrors
+        - createdAt
+        - updatedAt
+
+    # ── Validation ─────────────────────────────────────────────────────────────
+    ValidationInput:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+      required:
+        - data
+
+    ValidationResult:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        errorCount:
+          type: integer
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationError"
+      required:
+        - valid
+        - errorCount
+        - errors
+
+    ValidationError:
+      type: object
+      properties:
+        row:
+          type: integer
+        column:
+          type: string
+        message:
+          type: string
+        value:
+          type: ["string", "null"]
+      required:
+        - row
+        - column
+        - message
+
+    SubmissionInput:
+      type: object
+      properties:
+        certificationAcknowledged:
+          type: boolean
+        data:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+      required:
+        - certificationAcknowledged
+        - data
+
+    SubmissionReceipt:
+      type: object
+      properties:
+        requestId:
+          type: integer
+        submissionHash:
+          type: string
+        submittedAt:
+          type: string
+        status:
+          type: string
+      required:
+        - requestId
+        - submissionHash
+        - submittedAt
+        - status
