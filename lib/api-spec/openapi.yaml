@@ -830,9 +830,12 @@ components:
           type: integer
         columnName:
           type: string
+        ruleCategory:
+          type: string
+          enum: [business, technical, computed]
         ruleType:
           type: string
-          enum: [range, not_null, regex, cross_column, enum_check]
+          enum: [range, not_null, regex, cross_column, enum_check, business_check]
         operator:
           type: ["string", "null"]
         value:
@@ -847,6 +850,7 @@ components:
         - id
         - reportId
         - columnName
+        - ruleCategory
         - ruleType
         - description
         - createdAt
@@ -857,9 +861,12 @@ components:
         columnName:
           type: string
           minLength: 1
+        ruleCategory:
+          type: string
+          enum: [business, technical, computed]
         ruleType:
           type: string
-          enum: [range, not_null, regex, cross_column, enum_check]
+          enum: [range, not_null, regex, cross_column, enum_check, business_check]
         operator:
           type: string
         value:
@@ -870,6 +877,7 @@ components:
           type: string
       required:
         - columnName
+        - ruleCategory
         - ruleType
         - description
 

@@ -44,6 +44,7 @@ router.post("/reports/:reportId/rules", async (req, res): Promise<void> => {
   const [rule] = await db.insert(reportRulesTable).values({
     reportId: params.data.reportId,
     columnName: parsed.data.columnName,
+    ruleCategory: parsed.data.ruleCategory,
     ruleType: parsed.data.ruleType,
     operator: parsed.data.operator ?? null,
     value: parsed.data.value ?? null,

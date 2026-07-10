@@ -15,4 +15,5 @@ export const ReportRuleRuleType = {
   regex: 'regex',
   cross_column: 'cross_column',
   enum_check: 'enum_check',
+  business_check: 'business_check',
 } as const;

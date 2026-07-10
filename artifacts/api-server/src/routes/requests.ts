@@ -233,12 +233,43 @@ router.post("/requests/:id/validate", async (req, res): Promise<void> => {
           // invalid regex, skip
         }
       } else if (rule.ruleType === "enum_check" && rule.value && strValue !== null) {
-        const allowed = rule.value.split(",").map((v) => v.trim());
+        const allowed = rule.value.split(",").map((v: string) => v.trim());
         if (!allowed.includes(strValue)) {
           errors.push({
             row: rowIdx + 1,
             column: rule.columnName,
             message: `${rule.description}: value "${strValue}" is not in allowed values`,
+            value: strValue,
+          });
+        }
+      } else if (rule.ruleType === "cross_column" && rule.operator && rule.compareColumn) {
+        const rawCompare = row[rule.compareColumn];
+        const strCompare = rawCompare !== undefined && rawCompare !== null ? String(rawCompare) : null;
+        if (strValue !== null && strCompare !== null) {
+          const numVal = parseFloat(strValue);
+          const numCompare = parseFloat(strCompare);
+          let violated = false;
+          if (rule.operator === ">") violated = !(numVal > numCompare);
+          else if (rule.operator === "<") violated = !(numVal < numCompare);
+          else if (rule.operator === ">=") violated = !(numVal >= numCompare);
+          else if (rule.operator === "<=") violated = !(numVal <= numCompare);
+          else if (rule.operator === "=") violated = numVal !== numCompare;
+          else if (rule.operator === "!=") violated = numVal === numCompare;
+          if (violated) {
+            errors.push({
+              row: rowIdx + 1,
+              column: `${rule.columnName} vs ${rule.compareColumn}`,
+              message: `${rule.description}: "${strValue}" ${rule.operator} "${strCompare}" is not satisfied`,
+              value: strValue,
+            });
+          }
+        }
+      } else if (rule.ruleType === "business_check") {
+        if (rawValue === undefined || rawValue === null || rawValue === "") {
+          errors.push({
+            row: rowIdx + 1,
+            column: rule.columnName,
+            message: rule.description,
             value: strValue,
           });
         }

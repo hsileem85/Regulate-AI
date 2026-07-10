@@ -195,6 +195,15 @@ export interface ReportColumnInput {
   enumValues?: string;
 }
 
+export type ReportRuleRuleCategory = typeof ReportRuleRuleCategory[keyof typeof ReportRuleRuleCategory];
+
+
+export const ReportRuleRuleCategory = {
+  business: 'business',
+  technical: 'technical',
+  computed: 'computed',
+} as const;
+
 export type ReportRuleRuleType = typeof ReportRuleRuleType[keyof typeof ReportRuleRuleType];
 
 
@@ -204,12 +213,14 @@ export const ReportRuleRuleType = {
   regex: 'regex',
   cross_column: 'cross_column',
   enum_check: 'enum_check',
+  business_check: 'business_check',
 } as const;
 
 export interface ReportRule {
   id: number;
   reportId: number;
   columnName: string;
+  ruleCategory: ReportRuleRuleCategory;
   ruleType: ReportRuleRuleType;
   /** @nullable */
   operator?: string | null;
@@ -221,6 +232,15 @@ export interface ReportRule {
   createdAt: string;
 }
 
+export type ReportRuleInputRuleCategory = typeof ReportRuleInputRuleCategory[keyof typeof ReportRuleInputRuleCategory];
+
+
+export const ReportRuleInputRuleCategory = {
+  business: 'business',
+  technical: 'technical',
+  computed: 'computed',
+} as const;
+
 export type ReportRuleInputRuleType = typeof ReportRuleInputRuleType[keyof typeof ReportRuleInputRuleType];
 
 
@@ -230,11 +250,13 @@ export const ReportRuleInputRuleType = {
   regex: 'regex',
   cross_column: 'cross_column',
   enum_check: 'enum_check',
+  business_check: 'business_check',
 } as const;
 
 export interface ReportRuleInput {
   /** @minLength 1 */
   columnName: string;
+  ruleCategory: ReportRuleInputRuleCategory;
   ruleType: ReportRuleInputRuleType;
   operator?: string;
   value?: string;

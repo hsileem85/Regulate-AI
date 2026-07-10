@@ -7,7 +7,8 @@ export const reportRulesTable = pgTable("report_rules", {
   id: serial("id").primaryKey(),
   reportId: integer("report_id").notNull().references(() => reportsTable.id, { onDelete: "cascade" }),
   columnName: text("column_name").notNull(),
-  ruleType: text("rule_type").notNull(), // range | not_null | regex | cross_column | enum_check
+  ruleCategory: text("rule_category").notNull().default("technical"), // business | technical | computed
+  ruleType: text("rule_type").notNull(), // range | not_null | regex | cross_column | enum_check | business_check
   operator: text("operator"), // >, <, >=, <=, =, !=, matches
   value: text("value"),
   compareColumn: text("compare_column"),

@@ -11,6 +11,7 @@ import FraReports from './pages/fra/ReportsList';
 import ReportBuilder from './pages/fra/ReportBuilder';
 import ReportDetail from './pages/fra/ReportDetail';
 import FraMonitor from './pages/fra/Monitor';
+import FraCompanies from './pages/fra/Companies';
 
 // Company portal placeholders
 import CompanyDashboard from './pages/company/Dashboard';
@@ -31,7 +32,7 @@ function Router() {
       <Route path="/fra/reports/new" component={ReportBuilder} />
       <Route path="/fra/reports/:id" component={ReportDetail} />
       <Route path="/fra/monitor" component={FraMonitor} />
-      <Route path="/fra/companies" component={() => <Placeholder name="Companies" />} />
+      <Route path="/fra/companies" component={FraCompanies} />
       
       <Route path="/company/dashboard" component={CompanyDashboard} />
       <Route path="/company/inbox" component={CompanyInbox} />

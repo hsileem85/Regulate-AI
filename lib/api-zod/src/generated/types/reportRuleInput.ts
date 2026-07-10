@@ -5,11 +5,13 @@
  * Regulate AI - Reporting Bridge API
  * OpenAPI spec version: 0.1.0
  */
+import type { ReportRuleInputRuleCategory } from './reportRuleInputRuleCategory';
 import type { ReportRuleInputRuleType } from './reportRuleInputRuleType';
 
 export interface ReportRuleInput {
   /** @minLength 1 */
   columnName: string;
+  ruleCategory: ReportRuleInputRuleCategory;
   ruleType: ReportRuleInputRuleType;
   operator?: string;
   value?: string;
