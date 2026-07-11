@@ -273,6 +273,24 @@ router.post("/requests/:id/validate", async (req, res): Promise<void> => {
             value: strValue,
           });
         }
+      } else if (rule.ruleType === "is_integer") {
+        if (strValue !== null && !/^-?\d+$/.test(strValue)) {
+          errors.push({
+            row: rowIdx + 1,
+            column: rule.columnName,
+            message: `${rule.description}: value "${strValue}" is not an integer`,
+            value: strValue,
+          });
+        }
+      } else if (rule.ruleType === "no_numbers") {
+        if (strValue !== null && /\d/.test(strValue)) {
+          errors.push({
+            row: rowIdx + 1,
+            column: rule.columnName,
+            message: `${rule.description}: value "${strValue}" contains numbers`,
+            value: strValue,
+          });
+        }
       }
     }
   }

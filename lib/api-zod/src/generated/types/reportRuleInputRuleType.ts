@@ -16,4 +16,6 @@ export const ReportRuleInputRuleType = {
   cross_column: 'cross_column',
   enum_check: 'enum_check',
   business_check: 'business_check',
+  is_integer: 'is_integer',
+  no_numbers: 'no_numbers',
 } as const;

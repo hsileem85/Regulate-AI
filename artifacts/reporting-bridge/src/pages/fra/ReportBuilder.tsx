@@ -39,6 +39,8 @@ const TECH_RULE_TYPES = [
   { value: 'range', label: 'Numeric Range' },
   { value: 'regex', label: 'Regex Pattern' },
   { value: 'enum_check', label: 'Allowed Values' },
+  { value: 'is_integer', label: 'Integer Only' },
+  { value: 'no_numbers', label: 'No Numbers (Text Only)' },
 ];
 
 const OPERATORS = [
@@ -72,7 +74,7 @@ export default function ReportBuilder() {
   const [rules, setRules] = useState<ReportRule[]>([]);
   const [ruleCategory, setRuleCategory] = useState<'business' | 'technical' | 'computed'>('business');
   const [ruleColumn, setRuleColumn] = useState('');
-  const [techRuleType, setTechRuleType] = useState<'not_null' | 'range' | 'regex' | 'enum_check'>('not_null');
+  const [techRuleType, setTechRuleType] = useState<'not_null' | 'range' | 'regex' | 'enum_check' | 'is_integer' | 'no_numbers'>('not_null');
   const [ruleOperator, setRuleOperator] = useState('>');
   const [ruleValue, setRuleValue] = useState('');
   const [ruleCompareColumn, setRuleCompareColumn] = useState('');
@@ -521,7 +523,9 @@ export default function ReportBuilder() {
                           {r.ruleType === 'cross_column' ? `${r.columnName} ${r.operator} ${r.compareColumn}` :
                             r.ruleType === 'range' ? `${r.operator} ${r.value}` :
                               r.ruleType === 'enum_check' ? `in [${r.value}]` :
-                                r.ruleType === 'regex' ? `matches ${r.value}` : '-'}
+                                r.ruleType === 'regex' ? `matches ${r.value}` :
+                                  r.ruleType === 'is_integer' ? 'must be integer' :
+                                    r.ruleType === 'no_numbers' ? 'must not contain numbers' : '-'}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground text-xs">{r.description}</td>
                         <td className="px-4 py-3 text-right">
