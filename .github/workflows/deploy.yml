@@ -23,7 +23,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         
-      # الخطوة الجديدة: تسطيب pnpm
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -35,13 +34,10 @@ jobs:
           node-version: 20
           
       - name: Install dependencies
-        working-directory: ./artifacts/mockup-sandbox
-        # استخدام pnpm بدل npm
-        run: pnpm install
+        # هنا ضفنا الأمر اللي بيحل مشكلة الـ lockfile
+        run: pnpm install --no-frozen-lockfile
         
       - name: Build
-        working-directory: ./artifacts/mockup-sandbox
-        # استخدام pnpm بدل npm
         run: pnpm run build
         
       - name: Setup Pages
@@ -50,7 +46,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './artifacts/mockup-sandbox/dist'
+          # مسار الـ build الافتراضي في Replit/Vite
+          path: './dist'
           
       - name: Deploy to GitHub Pages
         id: deployment
