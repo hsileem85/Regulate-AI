@@ -28,7 +28,7 @@ if (!basePath) {
 }
 
 export default defineConfig({
-  base: basePath,
+  base: '/Regulate-AI/',
   plugins: [
     mockupPreviewPlugin(),
     react(),
