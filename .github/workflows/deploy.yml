@@ -34,10 +34,11 @@ jobs:
           node-version: 20
           
       - name: Install dependencies
-        # هنا ضفنا الأمر اللي بيحل مشكلة الـ lockfile
         run: pnpm install --no-frozen-lockfile
         
       - name: Build
+        # توجيه أمر الـ Build للفولدر الصحيح
+        working-directory: ./artifacts/mockup-sandbox
         run: pnpm run build
         
       - name: Setup Pages
@@ -46,8 +47,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # مسار الـ build الافتراضي في Replit/Vite
-          path: './dist'
+          # سحب النسخة النهائية من مسار الـ dist الصحيح
+          path: './artifacts/mockup-sandbox/dist'
           
       - name: Deploy to GitHub Pages
         id: deployment
